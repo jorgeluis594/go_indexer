@@ -11,11 +11,11 @@ import (
 
 type Mail struct {
 	MailId          string            `json:"mailId"`
-	Date            time.Time         `json:"date"`
+	Date            time.Time         `json:"createdAt"`
 	EmailSender     string            `json:"emailSender"`
-	EmailReceivers  []string          `json:"emailReceivers"`
-	CopiedReceivers []string          `json:"copiedReceivers"`
-	HiddenReceivers []string          `json:"hiddenReceivers"`
+	EmailReceivers  string            `json:"emailReceivers"`
+	CopiedReceivers string            `json:"copiedReceivers"`
+	HiddenReceivers string            `json:"hiddenReceivers"`
 	Subject         string            `json:"subject"`
 	CustomHeaders   map[string]string `json:"customHeaders"`
 	Content         string            `json:"content"`
@@ -26,9 +26,9 @@ func InitMail(mailReader *mail.Message) (*Mail, error) {
 	newMail := Mail{
 		MailId:          cleanScapeCharacters(headers.Get("Message-Id")),
 		EmailSender:     headers.Get("From"),
-		EmailReceivers:  strings.Split(headers.Get("To"), ", "),
-		CopiedReceivers: strings.Split(headers.Get("Cc"), ", "),
-		HiddenReceivers: strings.Split(headers.Get("Bcc"), ", "),
+		EmailReceivers:  strings.Replace(headers.Get("To"), ", ", ",", -1),
+		CopiedReceivers: strings.Replace(headers.Get("Cc"), ", ", ",", -1),
+		HiddenReceivers: strings.Replace(headers.Get("Bcc"), ", ", ",", -1),
 		Subject:         headers.Get("Subject"),
 	}
 
