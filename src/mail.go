@@ -50,7 +50,7 @@ func cleanScapeCharacters(info string) string {
 }
 
 func parseDate(date string) (time.Time, error) {
-	return time.Parse(time.RFC822, date)
+	return time.Parse("Mon, 2 Jan 2006 15:04:05 -0700 (MST)", date)
 }
 
 func customHeadersFor(headers mail.Header) (map[string]string, error) {
