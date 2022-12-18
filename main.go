@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	indexer "github.com/jorgeluis594/go_indexer/src"
 	"log"
 	"net/mail"
 	"os"
@@ -9,7 +11,7 @@ import (
 
 func main() {
 
-	file, err := os.Open("1.")
+	file, err := os.Open("4.")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,6 +22,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Imprime algunos datos del mensaje
-	fmt.Println(msg.Header)
+	email, err := indexer.InitMail(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	jsonData, err := json.Marshal(email)
+	if err != nil {
+		log.Fatal("Error parsing email to json")
+	}
+
+	fmt.Println(string(jsonData))
 }
