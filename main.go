@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	indexer "github.com/jorgeluis594/go_indexer/src"
 	"log"
@@ -10,27 +10,50 @@ import (
 )
 
 func main() {
-
-	file, err := os.Open("4.")
-	if err != nil {
-		log.Fatal(err)
+	path := "harris-s"
+	emails, success := loadEmails(path)
+	if success {
+		fmt.Println(len(*emails))
 	}
-	defer file.Close()
+}
 
-	msg, err := mail.ReadMessage(file)
-	if err != nil {
-		log.Fatal(err)
-	}
+func loadEmails(path string) (*[]indexer.Mail, bool) {
+	emails := make([]indexer.Mail, 0)
+	directory, err := indexer.InitDirectory("harris-s")
 
-	email, err := indexer.InitMail(msg)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	jsonData, err := json.Marshal(email)
-	if err != nil {
-		log.Fatal("Error parsing email to json")
+		log.Fatal("Error reading directory: ", path)
+		return &emails, false
 	}
 
-	fmt.Println(string(jsonData))
+	for _, path := range directory.GetPaths() {
+		emailReader, success := readEmail(path)
+		if !success {
+			continue
+		}
+		email, err := indexer.InitMail(emailReader)
+		if err != nil {
+			log.Printf("Error parsing email with path: %s\n", path)
+			continue
+		}
+		emails = append(emails, *email)
+	}
+
+	return &emails, true
+}
+
+func readEmail(path string) (*mail.Message, bool) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		log.Println("Error reading file: ", path)
+		return nil, false
+	}
+
+	msg, err := mail.ReadMessage(bytes.NewReader(data))
+	if err != nil {
+		log.Printf("File with path: %s is not a email\n", path)
+		return nil, false
+	}
+
+	return msg, true
 }
