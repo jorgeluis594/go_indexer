@@ -9,8 +9,8 @@ import (
 )
 
 type Http interface {
-	Post(path string) ([]byte, error)
-	Get(path string) ([]byte, error)
+	Post(path string, object interface{}) ([]byte, bool)
+	Get(path string) ([]byte, bool)
 }
 
 type HttpClient struct {
@@ -30,10 +30,10 @@ func InitHttpClient(host string, username string, password string) *HttpClient {
 	return &httpClient
 }
 
-func (c *HttpClient) Post(path string, object *interface{}) ([]byte, bool) {
+func (c *HttpClient) Post(path string, object interface{}) ([]byte, bool) {
 	var json *bytes.Buffer
 	if object != nil {
-		jsonData := toJson(object)
+		jsonData := toJson(&object)
 		json = bytes.NewBuffer(jsonData)
 	}
 
