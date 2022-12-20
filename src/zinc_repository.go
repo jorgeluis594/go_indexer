@@ -2,6 +2,10 @@ package indexer
 
 import "log"
 
+type Repository interface {
+	PersistEmails(emails []Mail)
+}
+
 type ZincRepository struct {
 	httpClient Http
 }
