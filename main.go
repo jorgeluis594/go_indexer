@@ -33,6 +33,10 @@ func main() {
 }
 
 func persistEmails(repository indexer.Repository, emails []indexer.Mail) {
+	f, _ := os.Create("persist_emails.pprof")
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+	
 	for len(emails) > 0 {
 		var numberOfEmails int
 		if len(emails) < 1000 {
