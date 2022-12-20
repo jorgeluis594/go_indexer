@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"flag"
+	"fmt"
 	indexer "github.com/jorgeluis594/go_indexer/src"
 	"log"
 	"net/mail"
@@ -9,13 +11,15 @@ import (
 )
 
 func main() {
-	path := "harris-s"
-	host := "http://localhost:4080"
-	username := "admin"
-	password := "Complexpass#123"
-	clientHttp := indexer.InitHttpClient(host, username, password)
+	path := flag.String("path", "", "path to index")
+	host := flag.String("host", "", "host of Zinc Search client")
+	username := flag.String("username", "", "username of db")
+	password := flag.String("password", "", "password of db")
+	flag.Parse()
+	
+	clientHttp := indexer.InitHttpClient(*host, *username, *password)
 	repository := indexer.InitRepository(clientHttp)
-	emails, success := loadEmails(path)
+	emails, success := loadEmails(*path)
 	if !success {
 		log.Fatal("No se pudieron cargar los emails del directorio: ", path)
 	}
@@ -29,6 +33,7 @@ func main() {
 		}
 		emailsToSend := emails[:numberOfEmails]
 		emails = emails[numberOfEmails:]
+		fmt.Println("Count of sent emails: ", len(emailsToSend))
 		repository.PersistEmails(emailsToSend)
 	}
 }
