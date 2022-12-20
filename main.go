@@ -8,9 +8,14 @@ import (
 	"log"
 	"net/mail"
 	"os"
+	"runtime/pprof"
 )
 
 func main() {
+	f, _ := os.Create("cpu.pprof")
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
 	path := flag.String("path", "", "path to index")
 	host := flag.String("host", "", "host of Zinc Search client")
 	username := flag.String("username", "", "username of db")
@@ -24,6 +29,10 @@ func main() {
 		log.Fatal("No se pudieron cargar los emails del directorio: ", path)
 	}
 
+	persistEmails(repository, emails)
+}
+
+func persistEmails(repository indexer.Repository, emails []indexer.Mail) {
 	for len(emails) > 0 {
 		var numberOfEmails int
 		if len(emails) < 1000 {
