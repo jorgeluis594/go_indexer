@@ -16,7 +16,7 @@ func main() {
 	username := flag.String("username", "", "username of db")
 	password := flag.String("password", "", "password of db")
 	flag.Parse()
-	
+
 	clientHttp := indexer.InitHttpClient(*host, *username, *password)
 	repository := indexer.InitRepository(clientHttp)
 	emails, success := loadEmails(*path)
@@ -40,7 +40,7 @@ func main() {
 
 func loadEmails(path string) ([]indexer.Mail, bool) {
 	emails := make([]indexer.Mail, 0)
-	directory, err := indexer.InitDirectory("harris-s")
+	directory, err := indexer.InitDirectory(path)
 
 	if err != nil {
 		log.Fatal("Error reading directory: ", path)
