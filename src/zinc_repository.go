@@ -24,6 +24,6 @@ func (r *ZincRepository) PersistEmails(emails []Mail) {
 	documents := documentsBulk{Index: "emails", Records: emails}
 	_, success := r.httpClient.Post("/api/_bulkv2", documents)
 	if !success {
-		log.Println("No se pudo crear el siguiente lotes de emails: ", emails)
+		log.Println("No se pudo crear la siguiente cantidad de emails: ", len(emails))
 	}
 }
