@@ -24,13 +24,13 @@ func main() {
 	flag.Parse()
 
 	clientHttp := repository.InitHttpClient(*host, *username, *password)
-	repository := repository.InitRepository(clientHttp)
+	repositoryDB := repository.InitRepository(clientHttp, "email_copy")
 	emails, success := loadEmails(*path)
 	if !success {
 		log.Fatal("No se pudieron cargar los emails del directorio: ", path)
 	}
 
-	persistEmails(repository, emails)
+	persistEmails(repositoryDB, emails)
 }
 
 func persistEmails(repository repository.Repository, emails []repository.Mail) {
@@ -44,7 +44,7 @@ func persistEmails(repository repository.Repository, emails []repository.Mail) {
 		emailsToSend := emails[:numberOfEmails]
 		emails = emails[numberOfEmails:]
 		fmt.Println("Count of sent emails: ", len(emailsToSend))
-		repository.PersistEmails("email_copy", emailsToSend)
+		repository.PersistEmails(emailsToSend)
 	}
 }
 

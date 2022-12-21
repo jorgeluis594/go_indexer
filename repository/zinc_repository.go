@@ -26,8 +26,8 @@ type documentsBulk struct {
 	Records []Mail `json:"records"`
 }
 
-func InitRepository(httpClient Http) *ZincRepository {
-	return &ZincRepository{httpClient: httpClient}
+func InitRepository(httpClient Http, index string) *ZincRepository {
+	return &ZincRepository{httpClient: httpClient, Index: index}
 }
 
 func (r *ZincRepository) PersistEmails(emails []Mail) {
