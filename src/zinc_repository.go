@@ -3,7 +3,7 @@ package indexer
 import "log"
 
 type Repository interface {
-	PersistEmails(emails []Mail)
+	PersistEmails(index string, emails []Mail)
 }
 
 type ZincRepository struct {
@@ -24,8 +24,8 @@ func InitRepository(httpClient Http) *ZincRepository {
 	return &ZincRepository{httpClient: httpClient}
 }
 
-func (r *ZincRepository) PersistEmails(emails []Mail) {
-	documents := documentsBulk{Index: "emails", Records: emails}
+func (r *ZincRepository) PersistEmails(index string, emails []Mail) {
+	documents := documentsBulk{Index: index, Records: emails}
 	_, success := r.httpClient.Post("/api/_bulkv2", documents)
 	if !success {
 		log.Println("No se pudo crear la siguiente cantidad de emails: ", len(emails))

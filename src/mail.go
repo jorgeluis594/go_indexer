@@ -26,9 +26,9 @@ func InitMail(mailReader *mail.Message) (*Mail, error) {
 	newMail := Mail{
 		MailId:          cleanScapeCharacters(headers.Get("Message-Id")),
 		EmailSender:     headers.Get("From"),
-		EmailReceivers:  strings.Replace(headers.Get("To"), ", ", ",", -1),
-		CopiedReceivers: strings.Replace(headers.Get("Cc"), ", ", ",", -1),
-		HiddenReceivers: strings.Replace(headers.Get("Bcc"), ", ", ",", -1),
+		EmailReceivers:  strings.Replace(headers.Get("To"), ", ", " ", -1),
+		CopiedReceivers: strings.Replace(headers.Get("Cc"), ", ", " ", -1),
+		HiddenReceivers: strings.Replace(headers.Get("Bcc"), ", ", " ", -1),
 		Subject:         headers.Get("Subject"),
 	}
 
