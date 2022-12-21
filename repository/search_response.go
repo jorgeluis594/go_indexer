@@ -21,8 +21,8 @@ type HitsTotal struct {
 	Value int `json:"value"`
 }
 
-func InitSearchResponse(response []byte, currentPage int, size int) (*SearchResponse, error) {
-	searchResponse := SearchResponse{CurrentPage: currentPage, Size: size}
+func InitSearchResponse(response []byte, currentPage int) (*SearchResponse, error) {
+	searchResponse := SearchResponse{CurrentPage: currentPage, Size: 30}
 	err := json.Unmarshal(response, &searchResponse)
 	if err != nil {
 		return nil, err

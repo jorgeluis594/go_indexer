@@ -8,7 +8,7 @@ import (
 
 type Repository interface {
 	PersistEmails(emails []Mail)
-	Search(q string, page int) (*SearchResponse, error)
+	Search(q string, page int) *SearchResponse
 }
 
 type ZincRepository struct {
@@ -38,23 +38,20 @@ func (r *ZincRepository) PersistEmails(emails []Mail) {
 	}
 }
 
-func (r *ZincRepository) Search(q string, page int) (*SearchResponse, error) {
+func (r *ZincRepository) Search(q string, page int) *SearchResponse {
 	query := SearchQuery{Q: q, Page: page}
 	path := fmt.Sprintf("/es/%s/_search", r.Index)
 	response, success := r.httpClient.Post(path, query.ToJson())
 	if !success {
-		var err Error
-		json.Unmarshal(response, &err)
-		return nil, fmt.Errorf("request error: %s", err.Message)
+		log.Fatalf("We get an invalid response the query was: %v", query)
 	}
 
-	var searchResponse SearchResponse
-	err := json.Unmarshal(response, &searchResponse)
+	searchResponse, err := InitSearchResponse(response, page)
 	if err != nil {
-		return nil, err
+		log.Fatalf("Error parsing response: %s", string(response))
 	}
 
-	return &searchResponse, nil
+	return searchResponse
 }
 
 func toJson(object interface{}) []byte {
