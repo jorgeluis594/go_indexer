@@ -21,7 +21,7 @@ func (q *SearchQuery) ToJson() []byte {
 			},
 		},
 		"size": perPage,
-		"from": (q.Page - 1) * perPage,
+		"from": ((q.Page - 1) * perPage) + 1,
 	}
 
 	jsonData, err := json.Marshal(data)
