@@ -1,13 +1,16 @@
 package repository
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"log"
+)
 
 type SearchQuery struct {
 	Q    string
 	Page int
 }
 
-func (q *SearchQuery) ToJson() ([]byte, error) {
+func (q *SearchQuery) ToJson() []byte {
 	perPage := 30
 	data := map[string]interface{}{
 		"query": map[string]interface{}{
@@ -23,8 +26,8 @@ func (q *SearchQuery) ToJson() ([]byte, error) {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		log.Fatalf("Cannot marshal next data: %v", data)
 	}
 
-	return jsonData, nil
+	return jsonData
 }
