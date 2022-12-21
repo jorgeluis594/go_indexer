@@ -2,14 +2,13 @@ package repository
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 )
 
 type Http interface {
-	Post(path string, object interface{}) ([]byte, bool)
+	Post(path string, data []byte) ([]byte, bool)
 	Get(path string) ([]byte, bool)
 }
 
@@ -30,11 +29,10 @@ func InitHttpClient(host string, username string, password string) *HttpClient {
 	return &httpClient
 }
 
-func (c *HttpClient) Post(path string, object interface{}) ([]byte, bool) {
+func (c *HttpClient) Post(path string, data []byte) ([]byte, bool) {
 	var json *bytes.Buffer
-	if object != nil {
-		jsonData := toJson(&object)
-		json = bytes.NewBuffer(jsonData)
+	if data != nil {
+		json = bytes.NewBuffer(data)
 	}
 
 	req, err := http.NewRequest("POST", c.Host+path, json)
@@ -73,12 +71,4 @@ func (c *HttpClient) sendRequest(req *http.Request) ([]byte, bool) {
 
 func (c *HttpClient) setBasicAuth(req *http.Request) {
 	req.SetBasicAuth(c.username, c.password)
-}
-
-func toJson(object *interface{}) []byte {
-	jsonData, err := json.Marshal(object)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return jsonData
 }
