@@ -1,13 +1,110 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Emails indexer</title>
 </head>
 <body>
-    <p>Hello world</p>
+
+  <div id="app" class="font-mono">
+    <nav class="bg-cyan-600 h-16 flex items-center justify-start mb-10">
+      <div class="w-full flex px-2 lg:px-8">
+        <svg class="mr-2 fill-white max-h-8" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+          viewBox="0 0 64 64" enable-background="new 0 0 64 64" xml:space="preserve">
+          <path id="Mail" d="M58.0034485,8H5.9965506c-3.3136795,0-5.9999995,2.6862001-5.9999995,6v36c0,3.3137016,2.6863203,6,5.9999995,6
+            h52.006897c3.3137016,0,6-2.6862984,6-6V14C64.0034485,10.6862001,61.3171501,8,58.0034485,8z M62.0034485,49.1108017
+            L43.084549,30.1919994l18.9188995-12.0555992V49.1108017z M5.9965506,10h52.006897c2.2056007,0,4,1.7943001,4,4v1.7664003
+            L34.4677505,33.3134003c-1.4902,0.9492989-3.3935013,0.9199982-4.8495998-0.0703011L1.9965508,14.4694996V14
+            C1.9965508,11.7943001,3.7910507,10,5.9965506,10z M1.9965508,16.8852005L21.182251,29.9251003L1.9965508,49.1108017V16.8852005z
+            M58.0034485,54H5.9965506c-1.6473999,0-3.0638998-1.0021019-3.6760998-2.4278984l20.5199013-20.5200024l5.6547985,3.843401
+            c1.0859013,0.7383003,2.3418007,1.1083984,3.5995998,1.1083984c1.1953011,0,2.3925018-0.3339996,3.4463005-1.0048981
+            l5.8423996-3.7230015l20.2961006,20.2961025C61.0673485,52.9978981,59.6508713,54,58.0034485,54z"/>
+        </svg>
+        <h1 class="text-2xl text-white">Emails indexer</h1>
+      </div>
+    </nav>
+
+    <div class="container mx-auto">
+      <div class="bg-white">
+        <div class="hidden w-full lg:flex items-center text-sm leading-6 text-slate-400 rounded-md ring-1 ring-slate-900/10 shadow-sm py-1.5 pl-2 pr-3 hover:ring-slate-300 dark:bg-slate-800 dark:highlight-white/5 dark:hover:bg-slate-700">
+          <svg width="24" height="24" fill="none" aria-hidden="true" class="mr-3 flex-none">
+            <path d="m19 19-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
+          </svg>
+          <input type="text" class="w-full outline-transparent" placeholder="Search..." v-on:keydown.enter="this.search(q, currentPage)">
+        </div>
+      </div>
+    </div>
+
+    <div class="container mx-auto flex w-full mt-10">
+      <div class="container w-1/2">
+        <table class="table-fixed w-full border border-2 border-slate-400">
+          <thead>
+            <tr>
+              <th class="px-2 text-left border border-slate-300">Subject</th>
+              <th class="px-2 text-left border border-slate-300">From</th>
+              <th class="px-2 text-left border border-slate-300">To</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="email in emails" class="hover:bg-cyan-50" :class="{'bg-cyan-50': email.mailId === selectedEmail.mailId}" v-on:click="showEmail(email.mailId)">
+              <td class="px-2 border border-slate-300">{{email['subject']}}</td>
+              <td class="px-2 border border-slate-300">{{email['emailSender']}}</td>
+              <td class="px-2 border border-slate-300">{{firstReceiverFor(email['emailReceivers'])}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="container w-1/2 px-4" v-if="!!selectedEmail['mailId']">
+        <p class="mb-2"><span class="font-bold">subject: </span>{{selectedEmail['subject']}}</p>
+        <p class="mb-2"><span class="font-bold">From: </span>{{selectedEmail['emailSender']}}</p>
+        <p class="mb-2"><span class="font-bold">to: </span>{{formatEmailReceivers(selectedEmail['emailReceivers'])}}</p>
+        <p class="mb-2 font-bold">Content:</p>
+        <p v-html="escapeContent(selectedEmail['content'])"></p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    Vue.createApp({
+      data() {
+        return {
+          emails: [],
+          currentPage: 1,
+          totalPages: 0,
+          selectedEmail: {},
+          q: ""
+        }
+      },
+      methods: {
+        async search(q, page) {
+          const response = await fetch(`http://localhost:8080/api/search?q=${q || ''}&page=${page || 1}`);
+          const data = await response.json();
+          this.emails = data['hits']['hits'].map( hit => hit['_source'])
+          this.currentPage = data['currentPage']
+          this.totalPages = data['totalPages']
+        },
+        // receivers is a string with email receivers separated with white space, this method separates with comma
+        formatEmailReceivers(receivers) {
+            return receivers.replaceAll(' ', ', ')
+        },
+        firstReceiverFor(receivers) {
+          return receivers.split(' ')[0]
+        },
+        showEmail(emailId) {
+          this.selectedEmail = this.emails.find(email => email['mailId'] === emailId);
+        },
+        escapeContent(content) {
+            return content.replaceAll('\n', '<br>')
+        }
+      },
+      mounted() { this.search('', 1) }
+    }).mount('#app')
+  </script>
 </body>
 </html>
