@@ -28,6 +28,7 @@ func main() {
 
 	r.Get("/api/search", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		q := r.URL.Query().Get("q")
 		page := r.URL.Query().Get("page")
 
@@ -38,11 +39,14 @@ func main() {
 		if err != nil {
 			currentPage = 1
 		}
+
+		var response *repository.SearchResponse
 		if q == "" {
-			json.NewEncoder(w).Encode(repository.SearchQuery{})
+			response = zincRepository.GetAll(currentPage)
+		} else {
+			response = zincRepository.Search(q, currentPage)
 		}
 
-		response := zincRepository.Search(q, currentPage)
 		json.NewEncoder(w).Encode(response)
 	})
 
