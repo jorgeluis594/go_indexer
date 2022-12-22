@@ -1,10 +1,13 @@
 package repository
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type SearchResponse struct {
-	CurrentPage int
-	Size        int
+	CurrentPage int  `json:"currentPage"`
+	Size        int  `json:"size"`
+	TotalPages  int  `json:"totalPages"`
 	Hits        Hits `json:"hits"`
 }
 
