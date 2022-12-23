@@ -42,6 +42,7 @@ func (c *HttpClient) Post(path string, data []byte) ([]byte, bool) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	c.setBasicAuth(req)
+	log.Printf("send request POST to %s, with params: %s", c.Host+path, string(data))
 	return c.sendRequest(req)
 }
 
