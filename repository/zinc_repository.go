@@ -9,8 +9,8 @@ import (
 
 type Repository interface {
 	PersistEmails(emails []Mail)
-	Search(q string, page int) *SearchResponse
-	GetAll(page int) *SearchResponse
+	Search(q string, page int) (*SearchResponse, error)
+	GetAll(page int) (*SearchResponse, error)
 }
 
 type ZincRepository struct {
@@ -34,38 +34,34 @@ func InitRepository(httpClient Http, index string) *ZincRepository {
 
 func (r *ZincRepository) PersistEmails(emails []Mail) {
 	documents := documentsBulk{Index: r.Index, Records: emails}
-	_, success := r.httpClient.Post("/api/_bulkv2", toJson(documents))
+	data, err := toJson(documents)
+	if err != nil {
+		log.Println(err)
+	}
+	_, success := r.httpClient.Post("/api/_bulkv2", data)
 	if !success {
 		log.Println("No se pudo crear la siguiente cantidad de emails: ", len(emails))
 	}
 }
 
-func (r *ZincRepository) Search(q string, page int) *SearchResponse {
+func (r *ZincRepository) Search(q string, page int) (*SearchResponse, error) {
 	query := SearchQuery{Q: q, Page: page}
 	path := fmt.Sprintf("/es/%s/_search", r.Index)
 	response, success := r.httpClient.Post(path, query.ToJson())
 	if !success {
-		log.Fatalf("We get an invalid response the query was: %s", string(query.ToJson()))
+		return nil, logError(fmt.Sprintf("We get an invalid response the query was: %s", string(query.ToJson())))
 	}
 
 	searchResponse, err := InitSearchResponse(response, page)
 	searchResponse.TotalPages = int(math.Ceil(float64(searchResponse.Hits.Total.Value) / float64(searchResponse.Size)))
 	if err != nil {
-		log.Fatalf("Error parsing response: %s", string(response))
+		return nil, logError(fmt.Sprintf("Error parsing response: %s", string(response)))
 	}
 
-	return searchResponse
+	return searchResponse, nil
 }
 
-func toJson(object interface{}) []byte {
-	jsonData, err := json.Marshal(object)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return jsonData
-}
-
-func (r *ZincRepository) GetAll(page int) *SearchResponse {
+func (r *ZincRepository) GetAll(page int) (*SearchResponse, error) {
 	perPage := 30
 	data := map[string]interface{}{
 		"query": map[string]interface{}{
@@ -79,14 +75,26 @@ func (r *ZincRepository) GetAll(page int) *SearchResponse {
 	response, success := r.httpClient.Post(path, jsonData)
 
 	if !success {
-		log.Fatalf("We get an invalid response the query was: %s", string(jsonData))
+		return nil, logError(fmt.Sprintf("We get an invalid response the query was: %s", string(jsonData)))
 	}
 
 	searchResponse, err := InitSearchResponse(response, page)
 	searchResponse.TotalPages = int(math.Ceil(float64(searchResponse.Hits.Total.Value) / float64(searchResponse.Size)))
 	if err != nil {
-		log.Fatalf("Error parsing response: %s", string(response))
+		return nil, logError(fmt.Sprintf("Error parsing response: %s", string(response)))
 	}
 
-	return searchResponse
+	return searchResponse, nil
+}
+
+func toJson(object interface{}) ([]byte, error) {
+	jsonData, err := json.Marshal(object)
+	if err != nil {
+		return nil, err
+	}
+	return jsonData, nil
+}
+
+func logError(message string) error {
+	return fmt.Errorf("Algo salio mal")
 }

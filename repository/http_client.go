@@ -37,7 +37,8 @@ func (c *HttpClient) Post(path string, data []byte) ([]byte, bool) {
 
 	req, err := http.NewRequest("POST", c.Host+path, json)
 	if err != nil {
-		log.Fatal("cannot make request with url: ", c.Host+path)
+		log.Println("cannot make request with url: ", c.Host+path)
+		return nil, false
 	}
 	req.Header.Set("Content-Type", "application/json")
 	c.setBasicAuth(req)
