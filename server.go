@@ -12,15 +12,29 @@ import (
 	"strconv"
 )
 
+func errorHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				http.Error(w, "Something went wrong", http.StatusInternalServerError)
+				return
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	zincRepository := initRepository()
+
 	r := chi.NewRouter()
+	r.Use(errorHandler)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		path := "./public/index.html"
 		content, err := os.ReadFile(path)
 		if err != nil {
-			log.Fatal("Error reading ", path)
+			panic(err)
 		}
 
 		fmt.Fprintf(w, string(content))
@@ -42,18 +56,24 @@ func main() {
 
 		var response *repository.SearchResponse
 		if q == "" {
-			response = zincRepository.GetAll(currentPage)
+			response, err = zincRepository.GetAll(currentPage)
 		} else {
-			response = zincRepository.Search(q, currentPage)
+			response, err = zincRepository.Search(q, currentPage)
+		}
+
+		if err != nil {
+			panic(err)
 		}
 
 		json.NewEncoder(w).Encode(response)
 	})
 
-	err := http.ListenAndServe(":8080", r)
+	port := ":8080"
+	err := http.ListenAndServe(port, r)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Server running on port: ", port)
 }
 
 func initRepository() repository.Repository {
