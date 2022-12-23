@@ -2,83 +2,99 @@ package lib
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/jorgeluis594/go_indexer/repository"
 	"log"
+	"math"
 	"net/mail"
 	"os"
 )
 
 type Processor struct {
-	paths         []string
-	pathsChannel  chan string
-	emailsChannel chan *repository.Mail
-	doneChannel   chan bool
-	repository    repository.Repository
-	emailsToSend  []repository.Mail
+	paths            []string
+	emailDataChannel chan []byte
+	emailsChannel    chan *repository.Mail
+	repository       repository.Repository
+	emailsToSend     []repository.Mail
+	emailsProcessed  int
 }
 
-func (p *Processor) InitProcessor(filePaths []string) {
-	p.paths = filePaths
-	p.pathsChannel = make(chan string)
-	p.emailsChannel = make(chan *repository.Mail)
-	p.doneChannel = make(chan bool)
+func InitProcessor(filePaths []string, r repository.Repository) *Processor {
+	return &Processor{
+		paths:            filePaths,
+		emailDataChannel: make(chan []byte),
+		emailsChannel:    make(chan *repository.Mail),
+		repository:       r,
+	}
 }
 
 func (p *Processor) Process() {
-	p.sendPathsToChannel()
+	// reading and parsing emails
 	for _, path := range p.paths {
-		go p.readFile(path, p.processEmail)
+		go p.readFile(path)
 	}
-	p.ensureToCloseRoutines()
+
+	for i := 0; i < len(p.paths)*2; i++ {
+		select {
+		case emailData := <-p.emailDataChannel:
+			go p.parseEmail(emailData)
+		case email := <-p.emailsChannel:
+			if email == nil {
+				continue
+			}
+			p.emailsToSend = append(p.emailsToSend, *email)
+		}
+	}
 	close(p.emailsChannel)
-	close(p.pathsChannel)
-	close(p.doneChannel)
-}
+	close(p.emailDataChannel)
 
-func (p *Processor) sendPathsToChannel() {
-	for _, path := range p.paths {
-		p.pathsChannel <- path
+	numOfRequest := int(math.Ceil(float64(len(p.emailsToSend)) / 1000))
+	log.Println(numOfRequest)
+	for i := 0; i < numOfRequest; i++ {
+		var availableEmailsToSend int
+		if len(p.emailsToSend) < 1000 {
+			availableEmailsToSend = len(p.emailsToSend)
+		} else {
+			availableEmailsToSend = 1000
+		}
+		emailsToSend := p.emailsToSend[:availableEmailsToSend]
+		p.emailsToSend = p.emailsToSend[1000:]
+		log.Println("cantidad de emails a enviar", len(emailsToSend))
+		log.Println("cantidad de emails a restantes", len(p.emailsToSend))
+		p.persistEmails(emailsToSend)
 	}
 }
 
-func (p *Processor) ensureToCloseRoutines() {
-	for i := 0; i < len(p.paths); i++ {
-		<-p.doneChannel
-	}
-}
-
-func (p *Processor) readFile(path string, callback func(string, []byte, func(*repository.Mail))) {
+func (p *Processor) readFile(path string) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Println("Error reading file: ", path)
-		p.doneChannel <- true
+		p.emailDataChannel <- nil
 	}
-	go callback(path, data, p.persistEmails)
+
+	p.emailDataChannel <- data
 }
 
-func (p *Processor) processEmail(path string, data []byte, callback func(*repository.Mail)) {
+func (p *Processor) parseEmail(data []byte) {
+	if data == nil {
+		p.emailsChannel <- nil
+		return
+	}
+
 	msg, err := mail.ReadMessage(bytes.NewReader(data))
 	if err != nil {
-		log.Printf("File with path: %s is not a email\n", path)
-		p.doneChannel <- true
+		p.emailsChannel <- nil
+		return
 	}
 
 	email, err := repository.InitMail(msg)
 	if err != nil {
-		log.Printf("Error parsing email with path: %s\n", path)
-		p.doneChannel <- true
+		p.emailsChannel <- nil
+		return
 	}
 
-	go callback(email)
+	p.emailsChannel <- email
 }
 
-func (p *Processor) persistEmails(email *repository.Mail) {
-	p.emailsToSend = append(p.emailsToSend, *email)
-	if len(p.emailsToSend) == 1000 || len(p.doneChannel)+1 == len(p.paths) {
-		fmt.Printf("Sending %d emails", len(p.emailsToSend))
-		p.repository.PersistEmails(p.emailsToSend)
-	}
-
-	p.doneChannel <- true
+func (p *Processor) persistEmails(emails []repository.Mail) {
+	p.repository.PersistEmails(emails)
 }
