@@ -67,6 +67,7 @@ func (r *ZincRepository) GetAll(page int) (*SearchResponse, error) {
 		"query": map[string]interface{}{
 			"match_all": map[string]interface{}{},
 		},
+		"sort": [1]map[string]string{{"createdAt": "asc"}},
 		"size": perPage,
 		"from": ((page - 1) * perPage) + 1,
 	}

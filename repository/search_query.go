@@ -17,9 +17,11 @@ func (q *SearchQuery) ToJson() []byte {
 			"bool": map[string]interface{}{
 				"should": []map[string]interface{}{
 					{"term": map[string]string{"copiedReceivers": q.Q}},
+					{"match_phrase": map[string]string{"content": q.Q}},
 				},
 			},
 		},
+		"sort": [1]map[string]string{{"createdAt": "asc"}},
 		"size": perPage,
 		"from": ((q.Page - 1) * perPage) + 1,
 	}
