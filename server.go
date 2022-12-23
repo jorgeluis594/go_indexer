@@ -69,11 +69,11 @@ func main() {
 	})
 
 	port := ":8080"
+	log.Println("Server running on port: ", port)
 	err := http.ListenAndServe(port, r)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Server running on port: ", port)
 }
 
 func initRepository() repository.Repository {
