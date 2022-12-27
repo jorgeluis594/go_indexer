@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	clientHttp := repository.InitHttpClient(*host, *username, *password)
-	repositoryDB := repository.InitRepository(clientHttp, "email_copy")
+	repositoryDB := repository.InitRepository(clientHttp, "enror_emails")
 	directory, err := indexer.InitDirectory(*path)
 
 	if err != nil {

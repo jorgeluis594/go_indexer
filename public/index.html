@@ -53,9 +53,9 @@
           </thead>
           <tbody>
             <tr v-for="email in emails" class="hover:bg-cyan-50" :class="{'bg-cyan-50': email.mailId === selectedEmail.mailId}" v-on:click="showEmail(email.mailId)">
-              <td class="px-2 border border-slate-300">{{email['subject']}}</td>
-              <td class="px-2 border border-slate-300">{{email['emailSender']}}</td>
-              <td class="px-2 border border-slate-300">{{firstReceiverFor(email['emailReceivers'])}}</td>
+              <td class="px-2 border border-slate-300 overflow-hidden">{{email['subject']}}</td>
+              <td class="px-2 border border-slate-300 overflow-hidden">{{email['emailSender']}}</td>
+              <td class="px-2 border border-slate-300 overflow-hidden">{{firstReceiverFor(email['emailReceivers'])}}</td>
             </tr>
           </tbody>
         </table>

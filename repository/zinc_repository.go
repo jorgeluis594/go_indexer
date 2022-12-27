@@ -63,14 +63,7 @@ func (r *ZincRepository) Search(q string, page int) (*SearchResponse, error) {
 
 func (r *ZincRepository) GetAll(page int) (*SearchResponse, error) {
 	perPage := 30
-	data := map[string]interface{}{
-		"query": map[string]interface{}{
-			"match_all": map[string]interface{}{},
-		},
-		"sort": [1]map[string]string{{"createdAt": "asc"}},
-		"size": perPage,
-		"from": ((page - 1) * perPage) + 1,
-	}
+	data := getAllQuery(page, perPage)
 	jsonData, _ := json.Marshal(data)
 	path := fmt.Sprintf("/es/%s/_search", r.Index)
 	response, success := r.httpClient.Post(path, jsonData)
@@ -98,4 +91,15 @@ func toJson(object interface{}) ([]byte, error) {
 
 func logError(message string) error {
 	return fmt.Errorf("Algo salio mal")
+}
+
+func getAllQuery(page int, perPage int) map[string]interface{} {
+	return map[string]interface{}{
+		"query": map[string]interface{}{
+			"match_all": map[string]interface{}{},
+		},
+		"sort": [1]map[string]string{{"createdAt": "desc"}},
+		"size": perPage,
+		"from": ((page - 1) * perPage) + 1,
+	}
 }

@@ -55,11 +55,9 @@ func (p *Processor) Process() {
 			availableEmailsToSend = len(p.emailsToSend)
 		} else {
 			availableEmailsToSend = 1000
+			p.emailsToSend = p.emailsToSend[1000:]
 		}
 		emailsToSend := p.emailsToSend[:availableEmailsToSend]
-		p.emailsToSend = p.emailsToSend[1000:]
-		log.Println("cantidad de emails a enviar", len(emailsToSend))
-		log.Println("cantidad de emails a restantes", len(p.emailsToSend))
 		p.persistEmails(emailsToSend)
 	}
 }
@@ -81,8 +79,7 @@ func (p *Processor) parseEmail(data []byte) {
 	}
 
 	msg, err := mail.ReadMessage(bytes.NewReader(data))
-	if err != nil {
-		p.emailsChannel <- nil
+	if err != nil {		p.emailsChannel <- nil
 		return
 	}
 

@@ -83,5 +83,5 @@ func initRepository() repository.Repository {
 	flag.Parse()
 
 	clientHttp := repository.InitHttpClient(*host, *username, *password)
-	return repository.InitRepository(clientHttp, "email_copy")
+	return repository.InitRepository(clientHttp, "enror_emails")
 }
