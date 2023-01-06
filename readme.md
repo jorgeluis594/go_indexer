@@ -18,9 +18,6 @@ Se ejecuta de la siguiente forma
 - `username`: Usuario de la base de datos
 - `password`: Contraseña del usuario de la base de datos
 
-#### TODO
-
-- Analizar los emails cocurrentemente para mejorar performance de la aplicación
 
 ## server.go
 
